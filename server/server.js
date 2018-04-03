@@ -7,7 +7,7 @@ const {mongoose} = require('../db/mongoose.js');
 const {Todo} = require('../model/todo');
 const {User} = require('../model/user');
 
-let port = process.env.PORT || 3000;
+const port = process.env.PORT || 3000;
 
 let app = express();
 
@@ -38,11 +38,11 @@ app.get('/todo', (req, res) => {
 
 app.get('/todo/:id', (req, res) => {
   if (!ObjectID.isValid(req.params.id)) {
-    return res.status(400).send({errorMessage: 'Invalid id'});
+    return res.status(404).send({errorMessage: 'Invalid id'});
   }
   Todo.findById(req.params.id).then((todo) => {
     if (!todo) {
-      return res.status(400).send({errorMessage: 'Id not found'});
+      return res.status(404).send({errorMessage: 'Id not found'});
     }
     res.status(200).send(todo);
   }).catch((e) => res.status(500).send({errorMessage: 'Internal Error'}));

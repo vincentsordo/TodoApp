@@ -1,19 +1,27 @@
 const expect = require('expect');
 const request = require('supertest');
 
+const {ObjectID} = require('mongodb');
 const {app} = require('../server/server.js');
 const {Todo} = require('../model/todo.js');
 
-const todosArray = [
-  {text:'First todo test'},
-  {text:'Second todo test'},
-  {text:'Third todo test'}
-];
+const todos = [{
+  _id: new ObjectID(),
+  text: 'First test todo'
+}, {
+  _id: new ObjectID(),
+  text: 'Second test todo'
+},{
+  _id: new ObjectID(),
+  text: 'Third test todo'
+}];
 
 beforeEach((done) => {
   Todo.remove({}).then(() => {
-    return Todo.insertMany(todosArray);
-  }).then((todos) => done())});
+    return Todo.insertMany(todos);
+  }).then(() => done());
+});
+
 
 describe('POST /todo', () => {
   it('should create a new todo', (done) => {
@@ -66,12 +74,5 @@ describe('GET /todo', () => {
         expect(res.body.todos.length).toBe(3);
       })
       .end(done());
-  })
+  });
 });
-
-// describe('GET /todo/:id', () => {
-//
-//   it('should get single todo with id', (done) => {
-//     done();
-//   });
-// });
