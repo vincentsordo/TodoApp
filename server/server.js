@@ -48,6 +48,20 @@ app.get('/todo/:id', (req, res) => {
   }).catch((e) => res.status(500).send({errorMessage: 'Internal Error'}));
 });
 
+app.delete('/todo/:id', (req, res) => {
+  if (!ObjectID.isValid(req.params.id)) {
+    return res.status(404).send({errorMessage: 'Invalid id'});
+  }
+
+  Todo.findByIdAndRemove(req.param.id).then((todo) => {
+    console.log(todo);
+    if (!todo) {
+      return res.status(404).send({errorMessage: 'Id not found'});
+    }
+    res.send(todo);
+  }).catch((e) => res.status(500).send({errorMessage: 'Internal error'}));
+});
+
 app.post('/user', (req, res) => {
   let newUser = new User({
     username: req.body.username,
