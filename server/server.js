@@ -2,6 +2,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 // local includes
+const {ObjectID} = require('mongodb');
 const {mongoose} = require('../db/mongoose.js');
 const {Todo} = require('../model/todo');
 const {User} = require('../model/user');
@@ -18,10 +19,8 @@ app.post('/todo', (req, res) => {
   });
 
   newTodo.save().then((doc) => {
-    console.log('Saved todo', doc);
     res.send(doc);
   }, (e) => {
-    console.log('Unable to save todo');
     res.status(400);
     res.send(e);
   });
@@ -35,6 +34,55 @@ app.get('/todo', (req, res) => {
   }, (e) => {
     res.status(400).send(e);
   });
+});
+
+app.get('/todo/:id', (req, res) => {
+  if (!ObjectID.isValid(req.params.id)) {
+    return res.status(400).send({errorMessage: 'Invalid id'});
+  }
+  Todo.findById(req.params.id).then((todo) => {
+    if (!todo) {
+      return res.status(400).send({errorMessage: 'Id not found'});
+    }
+    res.status(200).send(todo);
+  }).catch((e) => res.status(500).send({errorMessage: 'Internal Error'}));
+});
+
+app.post('/user', (req, res) => {
+  let newUser = new User({
+    username: req.body.username,
+    email: req.body.email,
+    password: req.body.password
+  });
+
+  newUser.save().then((doc) => {
+    res.send(doc);
+  }, (e) => {
+    res.status(400);
+    res.send(e);
+  });
+});
+
+app.get('/user', (req, res) => {
+  User.find().then((users) => {
+    res.send({
+      users
+    })
+  }, (e) => {
+    res.status(400).send(e);
+  });
+});
+
+app.get('/user/:id', (req, res) => {
+  if (!ObjectID.isValid(req.params.id)) {
+    return res.status(400).send({errorMessage: 'Invalid id'});
+  }
+  User.findById(req.params.id).then((user) => {
+    if (!user) {
+      return res.status(400).send({errorMessage: 'Id not found'});
+    }
+    res.status(200).send(user);
+  }).catch((e) => res.status(500).send(e));
 });
 
 app.listen(port, () => {
