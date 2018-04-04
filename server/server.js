@@ -1,4 +1,7 @@
+require('../config/config.js');
+
 // third party includes
+const _ = require('lodash');
 const express = require('express');
 const bodyParser = require('body-parser');
 // local includes
@@ -7,7 +10,7 @@ const {mongoose} = require('../db/mongoose.js');
 const {Todo} = require('../model/todo');
 const {User} = require('../model/user');
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT;
 
 let app = express();
 
@@ -44,7 +47,7 @@ app.get('/todo/:id', (req, res) => {
     if (!todo) {
       return res.status(404).send({errorMessage: 'Id not found'});
     }
-    res.status(200).send(todo);
+    res.status(200).send({todo});
   }).catch((e) => res.status(500).send({errorMessage: 'Internal Error'}));
 });
 
@@ -59,7 +62,31 @@ app.delete('/todo/:id', (req, res) => {
       return res.status(404).send();
     }
 
-    res.send(todo);
+    res.send({todo});
+  }).catch((e) => {
+    res.status(400).send();
+  });
+});
+
+app.patch('/todo/:id', (req, res) => {
+  let id = req.params.id;
+  let body = _.pick(req.body, ['text','completed']);
+
+  if (!ObjectID.isValid(req.params.id)) {
+    return res.status(404).send();
+  }
+
+  if (_.isBoolean(body.completed) && body.completed) {
+    body.completedAt = new Date().getTime();
+  } else {
+    body.completed = false;
+    body.completedAt = null;
+  }
+
+  Todo.findByIdAndUpdate(id, {$set: body}, {new: true}).then((todo) => {
+    if (!todo) return res.status(404).send();
+
+    res.send({todo});
   }).catch((e) => {
     res.status(400).send();
   });
