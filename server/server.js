@@ -1,7 +1,7 @@
 require('../config/config.js');
 
 // third party includes
-const _ = require('lodash'); 
+const _ = require('lodash');
 const express = require('express');
 const bodyParser = require('body-parser');
 // local includes
@@ -94,15 +94,14 @@ app.patch('/todo/:id', (req, res) => {
 
 
 app.post('/user', (req, res) => {
-  let newUser = new User({
-    username: req.body.username,
-    email: req.body.email,
-    password: req.body.password
-  });
+  let body = _.pick(req.body, ['email', 'password']);
+  let user = new User(body);
 
-  newUser.save().then((doc) => {
-    res.send(doc);
-  }, (e) => {
+  user.save(body).then(() => {
+    return user.generateAuthToken()
+  }).then((token) => {
+    res.header('x-auth', token).send(user);
+  }).catch((e) => {
     res.status(400);
     res.send(e);
   });
