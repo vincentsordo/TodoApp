@@ -1,7 +1,7 @@
 require('../config/config.js');
 
 // third party includes
-const _ = require('lodash');
+const _ = require('lodash'); 
 const express = require('express');
 const bodyParser = require('body-parser');
 // local includes
