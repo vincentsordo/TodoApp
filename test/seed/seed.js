@@ -19,16 +19,23 @@ const users = [
   {
     _id: userTwoId,
     email: 'mark.sordo@gmail.com',
-    password: 'userTwoPass'
+    password: 'userTwoPass',
+    tokens: [
+      {
+        access: 'auth',
+        token: jwt.sign({_id: userTwoId.toHexString(), access: 'auth'}, 'abc123').toString()
+      }]
   }
 ];
 
 const todos = [{
   _id: new ObjectID(),
-  text: 'First test todo'
+  text: 'First test todo',
+  _creator: userOneId
 }, {
   _id: new ObjectID(),
-  text: 'Second test todo'
+  text: 'Second test todo',
+  _creator: userTwoId
 }];
 
 const populateTodos = (done) => {

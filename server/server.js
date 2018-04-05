@@ -17,9 +17,10 @@ let app = express();
 
 app.use(bodyParser.json());
 
-app.post('/todo', (req, res) => {
+app.post('/todo', authenticate, (req, res) => {
   let newTodo = new Todo({
-    text: req.body.text
+    text: req.body.text,
+    _creator: req.user._id
   });
 
   newTodo.save().then((doc) => {
@@ -30,8 +31,8 @@ app.post('/todo', (req, res) => {
   });
 });
 
-app.get('/todo', (req, res) => {
-  Todo.find().then((todos) => {
+app.get('/todo', authenticate, (req, res) => {
+  Todo.find({_creator: req.user._id}).then((todos) => {
     res.send({
       todos
     })
@@ -40,11 +41,14 @@ app.get('/todo', (req, res) => {
   });
 });
 
-app.get('/todo/:id', (req, res) => {
+app.get('/todo/:id', authenticate, (req, res) => {
   if (!ObjectID.isValid(req.params.id)) {
     return res.status(404).send({errorMessage: 'Invalid id'});
   }
-  Todo.findById(req.params.id).then((todo) => {
+  Todo.findOne({
+        _id: req.params.id,
+        _creator: req.user._id
+  }).then((todo) => {
     if (!todo) {
       return res.status(404).send({errorMessage: 'Id not found'});
     }
@@ -52,13 +56,16 @@ app.get('/todo/:id', (req, res) => {
   }).catch((e) => res.status(500).send({errorMessage: 'Internal Error'}));
 });
 
-app.delete('/todo/:id', (req, res) => {
+app.delete('/todo/:id', authenticate, (req, res) => {
 
   if (!ObjectID.isValid(req.params.id)) {
     return res.status(404).send();
   }
 
-  Todo.findByIdAndRemove(req.params.id).then((todo) => {
+  Todo.findOneAndRemove({
+    _id: req.params.id,
+    _creator: req.user._id
+  }).then((todo) => {
     if (!todo) {
       return res.status(404).send();
     }
@@ -69,7 +76,7 @@ app.delete('/todo/:id', (req, res) => {
   });
 });
 
-app.patch('/todo/:id', (req, res) => {
+app.patch('/todo/:id', authenticate, (req, res) => {
   let id = req.params.id;
   let body = _.pick(req.body, ['text','completed']);
 
@@ -84,7 +91,10 @@ app.patch('/todo/:id', (req, res) => {
     body.completedAt = null;
   }
 
-  Todo.findByIdAndUpdate(id, {$set: body}, {new: true}).then((todo) => {
+  Todo.findOneAndUpdate({
+    _id: id,
+    _creator: req.user._id
+  }, {$set: body}, {new: true}).then((todo) => {
     if (!todo) return res.status(404).send();
 
     res.send({todo});
@@ -128,28 +138,6 @@ app.delete('/user/me/token', authenticate, (req, res) => {
   req.user.removeToken(req.token).then(() => {
     res.status(200).send();
   }).catch((e) => res.statu(400).send());
-});
-
-app.get('/user', (req, res) => {
-  User.find().then((users) => {
-    res.send({
-      users
-    })
-  }, (e) => {
-    res.status(400).send(e);
-  });
-});
-
-app.get('/user/:id', (req, res) => {
-  if (!ObjectID.isValid(req.params.id)) {
-    return res.status(400).send({errorMessage: 'Invalid id'});
-  }
-  User.findById(req.params.id).then((user) => {
-    if (!user) {
-      return res.status(400).send({errorMessage: 'Id not found'});
-    }
-    res.status(200).send(user);
-  }).catch((e) => res.status(500).send(e));
 });
 
 app.listen(port, () => {
