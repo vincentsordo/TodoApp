@@ -124,6 +124,12 @@ app.post('/user/login', (req, res) => {
   }).catch((e) => res.status(400).send());
 });
 
+app.delete('/user/me/token', authenticate, (req, res) => {
+  req.user.removeToken(req.token).then(() => {
+    res.status(200).send();
+  }).catch((e) => res.statu(400).send());
+});
+
 app.get('/user', (req, res) => {
   User.find().then((users) => {
     res.send({

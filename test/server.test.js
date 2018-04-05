@@ -328,3 +328,31 @@ describe('POST /user/login', () => {
       });
   });
 });
+
+describe('DELETE /user/me/token', () => {
+  it('should remove a token', (done) => {
+    request(app)
+      .delete('/user/me/token')
+      .set('x-auth', users[0].tokens[0].token)
+      .expect(200)
+      .end((err, res) => {
+        User.findById(users[0]._id).then((user) => {
+          expect(user.tokens.length).toBe(0);
+          done();
+        }).catch((e) => done(e));
+      });
+  });
+
+  it('it should not remove a token with invalid header', (done) => {
+    request(app)
+      .delete('/user/me/token')
+      .set('x-auth', 'invalidtoken')
+      .expect(400)
+      .end((err, res) => {
+        User.findById(users[0]._id).then((user) => {
+          expect(user.tokens.length).toBe(1);
+          done();
+        }).catch((e) => done(e));
+      });
+  });
+});
